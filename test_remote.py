@@ -4,6 +4,12 @@ test_remote.py - check your DEPLOYED connector from your laptop.
     python test_remote.py https://your-app.onrender.com YOUR_CONNECTOR_TOKEN
 """
 import asyncio
+
+try:  # trust the OS certificate store (needed behind corporate SSL inspection)
+    import truststore
+    truststore.inject_into_ssl()
+except ImportError:
+    pass
 import json
 import sys
 
