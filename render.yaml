@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: freshdesk-mcp-connector
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    healthCheckPath: /health
+    envVars:
+      - key: MCP_TRANSPORT
+        value: http
+      - key: PYTHON_VERSION
+        value: 3.12.6
+      - key: FRESHDESK_DOMAIN
+        sync: false
+      - key: FRESHDESK_API_KEY
+        sync: false
+      - key: CONNECTOR_TOKEN
+        generateValue: true

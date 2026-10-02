@@ -1,0 +1,331 @@
+{
+  "server": {
+    "name": "freshdesk",
+    "version": "1.0.0",
+    "transport": [
+      "stdio",
+      "streamable-http"
+    ],
+    "http_endpoint": "/mcp",
+    "auth": "Authorization: Bearer <CONNECTOR_TOKEN> (connector) + Freshdesk API key (server-side env var)",
+    "read_only": true
+  },
+  "tools": [
+    {
+      "name": "check_connection",
+      "description": "Verify the Freshdesk API key works. Returns the agent who owns the key and current rate-limit budget.",
+      "inputSchema": {
+        "properties": {},
+        "title": "check_connectionArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "list_tickets",
+      "description": "List recent tickets (newest first by default).\n\nArgs:\n    limit: max tickets to return (1-300).\n    updated_since: ISO date like '2026-09-01T00:00:00Z'. Without it Freshdesk only returns the last 30 days.\n    order_by / order_type: sort order.\n    predefined_filter: optional Freshdesk built-in view.\n    requester_email: only tickets raised by this customer email.\n",
+      "inputSchema": {
+        "properties": {
+          "limit": {
+            "default": 30,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "updated_since": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Updated Since"
+          },
+          "order_by": {
+            "default": "updated_at",
+            "enum": [
+              "created_at",
+              "updated_at",
+              "due_by",
+              "status"
+            ],
+            "title": "Order By",
+            "type": "string"
+          },
+          "order_type": {
+            "default": "desc",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "title": "Order Type",
+            "type": "string"
+          },
+          "predefined_filter": {
+            "anyOf": [
+              {
+                "enum": [
+                  "new_and_my_open",
+                  "watching",
+                  "spam",
+                  "deleted"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Predefined Filter"
+          },
+          "requester_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Requester Email"
+          }
+        },
+        "title": "list_ticketsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_ticket",
+      "description": "Get one ticket by ID: full description, requester, and (optionally) the reply/note thread.",
+      "inputSchema": {
+        "properties": {
+          "ticket_id": {
+            "title": "Ticket Id",
+            "type": "integer"
+          },
+          "include_conversations": {
+            "default": true,
+            "title": "Include Conversations",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ticket_id"
+        ],
+        "title": "get_ticketArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "list_ticket_conversations",
+      "description": "List all replies and notes on a ticket (use when a thread is long).",
+      "inputSchema": {
+        "properties": {
+          "ticket_id": {
+            "title": "Ticket Id",
+            "type": "integer"
+          },
+          "limit": {
+            "default": 50,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ticket_id"
+        ],
+        "title": "list_ticket_conversationsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "search_tickets",
+      "description": "Search tickets by filters. Combine any of: status, priority, tag, created_after/created_before\n(YYYY-MM-DD), agent_id, group_id. Advanced: pass raw_query in Freshdesk syntax, e.g.\n\"priority:4 AND status:2\". Returns 30 results per page, up to page 10.\nNote: Freshdesk search does NOT support free-text keyword search of subject/body.\n",
+      "inputSchema": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "Open",
+                  "Pending",
+                  "Resolved",
+                  "Closed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "enum": [
+                  "Low",
+                  "Medium",
+                  "High",
+                  "Urgent"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Priority"
+          },
+          "tag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tag"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Created After"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Created Before"
+          },
+          "agent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Agent Id"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Group Id"
+          },
+          "raw_query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Raw Query"
+          },
+          "page": {
+            "default": 1,
+            "title": "Page",
+            "type": "integer"
+          }
+        },
+        "title": "search_ticketsArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_contact",
+      "description": "Get a customer (contact) by ID - e.g. the requester_id on a ticket.",
+      "inputSchema": {
+        "properties": {
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "contact_id"
+        ],
+        "title": "get_contactArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "search_contacts",
+      "description": "Find customers by exact email, exact phone, or the start of their name.",
+      "inputSchema": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Phone"
+          },
+          "name_prefix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Name Prefix"
+          }
+        },
+        "title": "search_contactsArguments",
+        "type": "object"
+      }
+    }
+  ]
+}
